@@ -26,6 +26,9 @@
 .config/
 Library/
 .pnpm-store/
+.cache/
+.netlify/
+.npm/
 
 # debug
 npm-debug.log*
