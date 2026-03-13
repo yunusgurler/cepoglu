@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { HOME_SLIDES, type HomeSlide } from "../home-content";
 
 function clamp(value: number, min: number, max: number) {
@@ -24,36 +24,50 @@ function getTyped(text: string, progress: number) {
   return chars.slice(0, visible).join("");
 }
 
+function subscribeToReducedMotion(callback: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  media.addEventListener("change", callback);
+  return () => media.removeEventListener("change", callback);
+}
+
+function getReducedMotionSnapshot() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 type GallerySlideProps = {
   slide: HomeSlide;
   index: number;
   totalSlides: number;
-  opacity: number;
   isActive: boolean;
-  translateY: string;
-  scale: number;
-  contentTranslateY: string;
-  contentOpacity: number;
-  zIndex: number;
+  prefersReducedMotion: boolean;
+  slideRef: (node: HTMLElement | null) => void;
+  contentRef: (node: HTMLDivElement | null) => void;
 };
 
 function GallerySlide({
   slide,
   index,
   totalSlides,
-  opacity,
   isActive,
-  translateY,
-  scale,
-  contentTranslateY,
-  contentOpacity,
-  zIndex,
+  prefersReducedMotion,
+  slideRef,
+  contentRef,
 }: GallerySlideProps) {
-  const [typedProgress, setTypedProgress] = useState(slide.typewriter ? 0 : 1);
-  const [hasTypedOnce, setHasTypedOnce] = useState(false);
+  const [typedProgress, setTypedProgress] = useState(
+    slide.typewriter && !prefersReducedMotion ? 0 : 1
+  );
+  const [hasTypedOnce, setHasTypedOnce] = useState(prefersReducedMotion);
 
   useEffect(() => {
-    if (!slide.typewriter || hasTypedOnce || !isActive) {
+    if (!slide.typewriter || prefersReducedMotion || hasTypedOnce || !isActive) {
       return;
     }
 
@@ -77,21 +91,20 @@ function GallerySlide({
     };
 
     raf = requestAnimationFrame(animate);
-    return () => {
-      cancelAnimationFrame(raf);
-    };
-  }, [hasTypedOnce, isActive, slide.typewriter]);
+    return () => cancelAnimationFrame(raf);
+  }, [hasTypedOnce, isActive, prefersReducedMotion, slide.typewriter]);
 
   const typedTitle = slide.typewriter ? getTyped(slide.title, typedProgress) : slide.title;
   const typedSubtitle = slide.typewriter ? getTyped(slide.subtitle, typedProgress) : slide.subtitle;
 
   return (
     <article
+      ref={slideRef}
       className={`gallery-slide ${slide.imageClass}`}
       style={{
-        opacity,
-        zIndex,
-        transform: `translateY(${translateY}) scale(${scale})`,
+        opacity: index === 0 ? 1 : 0,
+        transform: "translate3d(0, 0, 0) scale(1.02)",
+        zIndex: index === 0 ? 3 : 1,
       }}
       aria-hidden={!isActive}
     >
@@ -102,7 +115,7 @@ function GallerySlide({
           muted
           loop
           playsInline
-          preload="auto"
+          preload="metadata"
           aria-hidden
         >
           <source src={slide.video} type="video/mp4" />
@@ -113,10 +126,11 @@ function GallerySlide({
 
       <div className="gallery-content-wrap">
         <div
+          ref={contentRef}
           className="gallery-content"
           style={{
-            transform: `translateY(${contentTranslateY})`,
-            opacity: contentOpacity,
+            opacity: index === 0 ? 1 : 0,
+            transform: "translate3d(0, 0, 0)",
           }}
         >
           <p className="gallery-kicker">{slide.kicker}</p>
@@ -132,7 +146,7 @@ function GallerySlide({
 
         <div className="gallery-bottom">
           <p>
-            <span /> Türkiye'miz İçin, Gururla
+            <span /> T&#252;rkiye&apos;miz I&#231;in, Gururla
           </p>
           <span>
             {formatSlideNumber(index + 1)} / {formatSlideNumber(totalSlides)}
@@ -145,91 +159,102 @@ function GallerySlide({
 
 export default function PinnedHeroGallery() {
   const sectionRef = useRef<HTMLElement | null>(null);
-  const [progress, setProgress] = useState(0);
-  const targetProgressRef = useRef(0);
-  const currentProgressRef = useRef(0);
+  const slideRefs = useRef<(HTMLElement | null)[]>([]);
+  const contentRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const frameRef = useRef<number | null>(null);
+  const boundsRef = useRef({ start: 0, end: 1 });
+  const lastActiveIndexRef = useRef(0);
+  const [activeIndex, setActiveIndex] = useState(0);
   const totalSlides = HOME_SLIDES.length;
-  const segment = totalSlides > 1 ? 1 / (totalSlides - 1) : 1;
+  const prefersReducedMotion = useSyncExternalStore(
+    subscribeToReducedMotion,
+    getReducedMotionSnapshot,
+    () => false
+  );
 
   useEffect(() => {
-    let raf = 0;
-
-    const onScroll = () => {
-      const node = sectionRef.current;
-      if (!node) {
-        return;
-      }
-
-      const rect = node.getBoundingClientRect();
-      const total = node.offsetHeight - window.innerHeight;
-      if (total <= 0) {
-        targetProgressRef.current = 0;
-        return;
-      }
-
-      const traveled = clamp(-rect.top, 0, total);
-      targetProgressRef.current = traveled / total;
-    };
-
-    const tick = () => {
-      const target = targetProgressRef.current;
-      const current = currentProgressRef.current;
-      const next = current + (target - current) * 0.14;
-
-      if (Math.abs(next - current) > 0.0004) {
-        currentProgressRef.current = next;
-        setProgress(next);
-      } else if (current !== target) {
-        currentProgressRef.current = target;
-        setProgress(target);
-      }
-
-      raf = requestAnimationFrame(tick);
-    };
-
-    onScroll();
-    raf = requestAnimationFrame(tick);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, []);
-
-  const activeIndex = useMemo(() => {
-    if (totalSlides <= 1) {
-      return 0;
+    const section = sectionRef.current;
+    if (!section) {
+      return;
     }
 
-    return clamp(Math.floor(progress / segment), 0, totalSlides - 1);
-  }, [progress, segment, totalSlides]);
+    const measure = () => {
+      const start = section.getBoundingClientRect().top + window.scrollY;
+      const distance = Math.max(section.offsetHeight - window.innerHeight, 1);
+      boundsRef.current = {
+        start,
+        end: start + distance,
+      };
+    };
 
-  const slideStates = useMemo(
-    () => {
-      const position = progress * (totalSlides - 1);
+    const applyProgress = () => {
+      frameRef.current = null;
 
-      return HOME_SLIDES.map((_, index) => {
+      const { start, end } = boundsRef.current;
+      const progress = clamp((window.scrollY - start) / Math.max(end - start, 1), 0, 1);
+      const position = progress * Math.max(totalSlides - 1, 0);
+      const nextActiveIndex = totalSlides <= 1 ? 0 : clamp(Math.round(position), 0, totalSlides - 1);
+      const reducedMotion = prefersReducedMotion;
+
+      for (let index = 0; index < totalSlides; index += 1) {
+        const slide = slideRefs.current[index];
+        const content = contentRefs.current[index];
+
+        if (!slide || !content) {
+          continue;
+        }
+
         const distance = index - position;
         const absDistance = Math.abs(distance);
         const isCurrent = absDistance < 0.5;
         const isActive = absDistance < 1.1;
 
-        return {
-          opacity: isActive ? 1 : 0,
-          translateY: `${distance * 10}%`,
-          scale: 1.02 + absDistance * 0.05,
-          contentTranslateY: `${distance * 34}px`,
-          contentOpacity: clamp(1 - absDistance * 1.15, 0, 1),
-          zIndex: isCurrent ? 3 : isActive ? 2 : 1,
-          isActive,
-        };
-      });
-    },
-    [progress, totalSlides]
-  );
+        slide.style.opacity = isActive ? "1" : "0";
+        slide.style.zIndex = isCurrent ? "3" : isActive ? "2" : "1";
+        slide.style.pointerEvents = isCurrent ? "auto" : "none";
+        slide.style.transform = reducedMotion
+          ? "translate3d(0, 0, 0) scale(1)"
+          : `translate3d(0, ${distance * 10}%, 0) scale(${1.02 + absDistance * 0.05})`;
+
+        content.style.opacity = reducedMotion ? (isCurrent ? "1" : "0") : String(clamp(1 - absDistance * 1.15, 0, 1));
+        content.style.transform = reducedMotion
+          ? "translate3d(0, 0, 0)"
+          : `translate3d(0, ${distance * 34}px, 0)`;
+      }
+
+      if (nextActiveIndex !== lastActiveIndexRef.current) {
+        lastActiveIndexRef.current = nextActiveIndex;
+        setActiveIndex(nextActiveIndex);
+      }
+    };
+
+    const requestUpdate = () => {
+      if (frameRef.current !== null) {
+        return;
+      }
+
+      frameRef.current = requestAnimationFrame(applyProgress);
+    };
+
+    const handleResize = () => {
+      measure();
+      requestUpdate();
+    };
+
+    measure();
+    applyProgress();
+
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+      }
+      window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [prefersReducedMotion, totalSlides]);
 
   return (
     <section ref={sectionRef} className="pinned-gallery" aria-label="Tam ekran proje galerisi">
@@ -240,13 +265,14 @@ export default function PinnedHeroGallery() {
             slide={slide}
             index={index}
             totalSlides={totalSlides}
-            opacity={slideStates[index].opacity}
-            translateY={slideStates[index].translateY}
-            scale={slideStates[index].scale}
-            contentTranslateY={slideStates[index].contentTranslateY}
-            contentOpacity={slideStates[index].contentOpacity}
-            zIndex={slideStates[index].zIndex}
-            isActive={slideStates[index].isActive}
+            isActive={index === activeIndex}
+            prefersReducedMotion={prefersReducedMotion}
+            slideRef={(node) => {
+              slideRefs.current[index] = node;
+            }}
+            contentRef={(node) => {
+              contentRefs.current[index] = node;
+            }}
           />
         ))}
       </div>
