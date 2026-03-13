@@ -1,5 +1,5 @@
 [build]
-  command = "pnpm build"
+  command = "./node_modules/.bin/next build"
   publish = ".next"
 
 [build.environment]
