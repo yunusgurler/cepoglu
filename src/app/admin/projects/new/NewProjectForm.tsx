@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import type { ProjectItem } from "@/lib/projects";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type UploadKind = "image" | "video";
@@ -29,7 +30,7 @@ async function uploadFiles(
   kind: UploadKind
 ) {
   const supabase = createSupabaseBrowserClient();
-  const mediaRows: { project_id: string; kind: UploadKind; storage_path: string; public_url: string }[] = [];
+  const mediaRows: { project_id: string; kind: UploadKind; sort_order: number; storage_path: string; public_url: string }[] = [];
 
   for (const file of files) {
     const fileName = `${Date.now()}-${crypto.randomUUID()}-${sanitizeFileName(file.name)}`;
@@ -48,6 +49,7 @@ async function uploadFiles(
     mediaRows.push({
       project_id: projectId,
       kind,
+      sort_order: mediaRows.length,
       storage_path: storagePath,
       public_url: data.publicUrl,
     });
@@ -56,10 +58,15 @@ async function uploadFiles(
   return mediaRows;
 }
 
-export default function NewProjectForm() {
+type NewProjectFormProps = {
+  project?: ProjectItem;
+};
+
+export default function NewProjectForm({ project }: NewProjectFormProps) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const isEditMode = Boolean(project);
 
   const handleSubmit = (formData: FormData) => {
     startTransition(async () => {
@@ -84,7 +91,7 @@ export default function NewProjectForm() {
         return;
       }
 
-      if (imageFiles.length === 0) {
+      if (!isEditMode && imageFiles.length === 0) {
         setError("En az bir gorsel yuklemelisiniz.");
         return;
       }
@@ -106,40 +113,67 @@ export default function NewProjectForm() {
           return;
         }
 
-        const { data: projectRow, error: projectError } = await supabase
-          .from("projects")
-          .select("sort_order")
-          .order("sort_order", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        let projectId = project?.id;
 
-        if (projectError) {
-          throw new Error(projectError.message);
+        if (isEditMode) {
+          const { error: updateError } = await supabase
+            .from("projects")
+            .update({
+              slug: normalizedSlug,
+              name,
+              location,
+              type,
+              status,
+              summary,
+              details,
+            })
+            .eq("id", project!.id);
+
+          if (updateError) {
+            throw new Error(updateError.message);
+          }
+        } else {
+          const { data: projectRow, error: projectError } = await supabase
+            .from("projects")
+            .select("sort_order")
+            .order("sort_order", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (projectError) {
+            throw new Error(projectError.message);
+          }
+
+          const nextSortOrder = (projectRow?.sort_order ?? -1) + 1;
+
+          const { data: insertedProjectRow, error: insertError } = await supabase
+            .from("projects")
+            .insert({
+              slug: normalizedSlug,
+              sort_order: nextSortOrder,
+              name,
+              location,
+              type,
+              status,
+              summary,
+              details,
+            })
+            .select("id")
+            .single();
+
+          if (insertError || !insertedProjectRow) {
+            throw new Error(insertError?.message ?? "Proje kaydi olusturulamadi.");
+          }
+
+          projectId = insertedProjectRow.id;
         }
 
-        const nextSortOrder = (projectRow?.sort_order ?? -1) + 1;
-
-        const { data: insertedProjectRow, error: insertError } = await supabase
-          .from("projects")
-          .insert({
-            slug: normalizedSlug,
-            sort_order: nextSortOrder,
-            name,
-            location,
-            type,
-            status,
-            summary,
-            details,
-          })
-          .select("id")
-          .single();
-
-        if (insertError || !insertedProjectRow) {
-          throw new Error(insertError?.message ?? "Proje kaydi olusturulamadi.");
+        if (!projectId) {
+          throw new Error("Proje kaydi bulunamadi.");
         }
 
-        const imageRows = await uploadFiles(insertedProjectRow.id, imageFiles, "project-images", "image");
-        const videoRows = await uploadFiles(insertedProjectRow.id, videoFiles, "project-videos", "video");
+        const imageRows = await uploadFiles(projectId, imageFiles, "project-images", "image");
+        const videoRows = await uploadFiles(projectId, videoFiles, "project-videos", "video");
         const mediaRows = [...imageRows, ...videoRows];
 
         if (mediaRows.length > 0) {
@@ -163,19 +197,24 @@ export default function NewProjectForm() {
       <div className="admin-grid">
         <label className="admin-field">
           <span>Proje Adi</span>
-          <input type="text" name="name" required />
+          <input type="text" name="name" defaultValue={project?.name ?? ""} required />
         </label>
         <label className="admin-field">
           <span>Slug</span>
-          <input type="text" name="slug" placeholder="bos birakirsan otomatik uretilir" />
+          <input
+            type="text"
+            name="slug"
+            defaultValue={project?.slug ?? ""}
+            placeholder="bos birakirsan otomatik uretilir"
+          />
         </label>
         <label className="admin-field">
           <span>Konum</span>
-          <input type="text" name="location" required />
+          <input type="text" name="location" defaultValue={project?.location ?? ""} required />
         </label>
         <label className="admin-field">
           <span>Tip</span>
-          <select name="type" defaultValue={PROJECT_TYPE_OPTIONS[0]} required>
+          <select name="type" defaultValue={project?.type ?? PROJECT_TYPE_OPTIONS[0]} required>
             {PROJECT_TYPE_OPTIONS.map((option) => (
               <option key={option} value={option}>
                 {option}
@@ -185,7 +224,7 @@ export default function NewProjectForm() {
         </label>
         <label className="admin-field">
           <span>Durum</span>
-          <select name="status" defaultValue={PROJECT_STATUS_OPTIONS[0]} required>
+          <select name="status" defaultValue={project?.status ?? PROJECT_STATUS_OPTIONS[0]} required>
             {PROJECT_STATUS_OPTIONS.map((option) => (
               <option key={option} value={option}>
                 {option}
@@ -197,30 +236,42 @@ export default function NewProjectForm() {
 
       <label className="admin-field">
         <span>Kisa Aciklama</span>
-        <textarea name="summary" rows={4} required />
+        <textarea name="summary" rows={4} defaultValue={project?.summary ?? ""} required />
       </label>
 
       <label className="admin-field">
         <span>Detaylar</span>
-        <textarea name="details" rows={6} placeholder="Her satira bir detay maddesi yazin." />
+        <textarea
+          name="details"
+          rows={6}
+          defaultValue={project?.details.join("\n") ?? ""}
+          placeholder="Her satira bir detay maddesi yazin."
+        />
       </label>
 
       <div className="admin-grid">
         <label className="admin-field">
-          <span>Gorseller</span>
-          <input type="file" name="images" accept="image/*" multiple required />
+          <span>{isEditMode ? "Yeni Gorseller Ekle" : "Gorseller"}</span>
+          <input type="file" name="images" accept="image/*" multiple required={!isEditMode} />
         </label>
         <label className="admin-field">
-          <span>Videolar</span>
+          <span>{isEditMode ? "Yeni Videolar Ekle" : "Videolar"}</span>
           <input type="file" name="videos" accept="video/mp4,video/quicktime,video/webm" multiple />
         </label>
       </div>
 
       {error ? <p className="admin-error">{error}</p> : null}
 
+      {isEditMode ? (
+        <p className="admin-order-note">
+          Mevcut medya dosyalari korunur. Galeri sirasi ve medya duzeni icin proje kartindaki `Galeri` ekranini
+          kullanin.
+        </p>
+      ) : null}
+
       <div className="admin-form-actions">
         <button type="submit" className="admin-button" disabled={isPending}>
-          {isPending ? "Kaydediliyor..." : "Projeyi Kaydet"}
+          {isPending ? "Kaydediliyor..." : isEditMode ? "Projeyi Guncelle" : "Projeyi Kaydet"}
         </button>
       </div>
     </form>

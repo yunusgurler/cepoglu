@@ -164,6 +164,7 @@ for (const project of projects) {
     mediaRows.push({
       project_id: projectRow.id,
       kind: "image",
+      sort_order: mediaRows.length,
       storage_path: coverStoragePath,
       public_url: publicUrl,
     });
@@ -182,6 +183,7 @@ for (const project of projects) {
       mediaRows.push({
         project_id: projectRow.id,
         kind: "image",
+        sort_order: mediaRows.length,
         storage_path: storagePath,
         public_url: publicUrl,
       });

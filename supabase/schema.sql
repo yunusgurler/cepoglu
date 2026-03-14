@@ -20,10 +20,14 @@ create table if not exists public.project_media (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references public.projects(id) on delete cascade,
   kind text not null check (kind in ('image', 'video')),
+  sort_order integer not null default 999,
   storage_path text not null,
   public_url text not null,
   created_at timestamptz not null default now()
 );
+
+alter table public.project_media
+add column if not exists sort_order integer not null default 999;
 
 create index if not exists projects_created_at_idx on public.projects(created_at desc);
 create index if not exists project_media_project_id_idx on public.project_media(project_id);

@@ -7,6 +7,7 @@ import fallbackProjects from "../content/projects.json";
 export type ProjectMediaItem = {
   id: string;
   kind: "image" | "video";
+  sortOrder: number;
   storagePath: string;
   publicUrl: string;
   createdAt: string;
@@ -42,6 +43,7 @@ type ProjectRow = {
     | {
         id: string;
         kind: "image" | "video";
+        sort_order: number | null;
         storage_path: string;
         public_url: string;
         created_at: string;
@@ -68,13 +70,22 @@ function getPrioritySortOrder(slug: string, fallbackIndex: number) {
 }
 
 function mapProject(row: ProjectRow): ProjectItem {
-  const media = (row.project_media ?? []).map((item) => ({
-    id: item.id,
-    kind: item.kind,
-    storagePath: item.storage_path,
-    publicUrl: item.public_url,
-    createdAt: item.created_at,
-  }));
+  const media = (row.project_media ?? [])
+    .map((item) => ({
+      id: item.id,
+      kind: item.kind,
+      sortOrder: item.sort_order ?? Number.MAX_SAFE_INTEGER,
+      storagePath: item.storage_path,
+      publicUrl: item.public_url,
+      createdAt: item.created_at,
+    }))
+    .sort((left, right) => {
+      if (left.sortOrder !== right.sortOrder) {
+        return left.sortOrder - right.sortOrder;
+      }
+
+      return left.createdAt.localeCompare(right.createdAt);
+    });
 
   const coverImage = media.find((item) => item.kind === "image")?.publicUrl ?? null;
 
@@ -100,6 +111,7 @@ function getFallbackProjectMedia(project: FallbackProjectRow, index: number): Pr
   media.push({
     id: `${project.slug}-cover`,
     kind: "image",
+    sortOrder: 0,
     storagePath: project.image,
     publicUrl: project.image,
     createdAt: new Date(index).toISOString(),
@@ -123,6 +135,7 @@ function getFallbackProjectMedia(project: FallbackProjectRow, index: number): Pr
     media.push({
       id: `${project.slug}-${fileName}`,
       kind,
+      sortOrder: media.length,
       storagePath: `/images/projects/gallery/${project.slug}/${fileName}`,
       publicUrl: `/images/projects/gallery/${project.slug}/${fileName}`,
       createdAt: new Date(index).toISOString(),
@@ -172,10 +185,11 @@ export async function getProjects() {
   const { data, error } = await supabase
     .from("projects")
     .select(
-      "id, slug, sort_order, name, location, type, status, summary, details, created_at, project_media(id, kind, storage_path, public_url, created_at)"
+      "id, slug, sort_order, name, location, type, status, summary, details, created_at, project_media(id, kind, sort_order, storage_path, public_url, created_at)"
     )
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false })
+    .order("sort_order", { foreignTable: "project_media", ascending: true })
     .order("created_at", { foreignTable: "project_media", ascending: true });
 
   if (error) {
@@ -194,9 +208,37 @@ export async function getProjectBySlug(slug: string) {
   const { data, error } = await supabase
     .from("projects")
     .select(
-      "id, slug, sort_order, name, location, type, status, summary, details, created_at, project_media(id, kind, storage_path, public_url, created_at)"
+      "id, slug, sort_order, name, location, type, status, summary, details, created_at, project_media(id, kind, sort_order, storage_path, public_url, created_at)"
     )
     .eq("slug", slug)
+    .order("sort_order", { foreignTable: "project_media", ascending: true })
+    .order("created_at", { foreignTable: "project_media", ascending: true })
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to fetch project: ${error.message}`);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return mapProject(data as ProjectRow);
+}
+
+export async function getProjectById(projectId: string) {
+  if (!hasSupabasePublicEnv()) {
+    return getFallbackProjects().find((project) => project.id === projectId) ?? null;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("projects")
+    .select(
+      "id, slug, sort_order, name, location, type, status, summary, details, created_at, project_media(id, kind, sort_order, storage_path, public_url, created_at)"
+    )
+    .eq("id", projectId)
+    .order("sort_order", { foreignTable: "project_media", ascending: true })
     .order("created_at", { foreignTable: "project_media", ascending: true })
     .maybeSingle();
 

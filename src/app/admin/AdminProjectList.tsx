@@ -90,6 +90,12 @@ export default function AdminProjectList({ projects }: AdminProjectListProps) {
                 <Link href={`/projeler/${project.slug}`} className="admin-button admin-button-ghost">
                   Goruntule
                 </Link>
+                <Link href={`/admin/projects/${project.id}/edit`} className="admin-button admin-button-ghost">
+                  Duzenle
+                </Link>
+                <Link href={`/admin/projects/${project.id}`} className="admin-button admin-button-ghost">
+                  Galeri
+                </Link>
                 <form action={deleteProjectAction}>
                   <input type="hidden" name="projectId" value={project.id} />
                   <DeleteProjectButton />

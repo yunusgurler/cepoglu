@@ -141,3 +141,38 @@ export async function saveProjectOrderAction(formData: FormData) {
   revalidatePath("/projeler");
   redirect("/admin");
 }
+
+export async function saveProjectMediaOrderAction(formData: FormData) {
+  if (!hasSupabaseServiceRoleEnv()) {
+    throw new Error("Supabase service role ayarlari eksik.");
+  }
+
+  const user = await getAdminUser();
+
+  if (!user) {
+    redirect("/admin/login");
+  }
+
+  const projectId = String(formData.get("projectId") ?? "");
+  const mediaOrderRaw = String(formData.get("mediaOrder") ?? "");
+  const mediaOrder = JSON.parse(mediaOrderRaw) as string[];
+
+  if (!projectId || !Array.isArray(mediaOrder) || mediaOrder.length === 0) {
+    return;
+  }
+
+  const admin = createSupabaseAdminClient();
+
+  for (const [index, mediaId] of mediaOrder.entries()) {
+    const { error } = await admin.from("project_media").update({ sort_order: index }).eq("id", mediaId);
+
+    if (error) {
+      throw new Error(`Failed to update media order: ${error.message}`);
+    }
+  }
+
+  revalidatePath(`/admin/projects/${projectId}`);
+  revalidatePath("/admin");
+  revalidatePath("/projeler");
+  redirect(`/admin/projects/${projectId}`);
+}
