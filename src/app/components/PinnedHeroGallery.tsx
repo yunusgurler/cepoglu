@@ -12,18 +12,6 @@ function formatSlideNumber(value: number) {
   return String(value).padStart(2, "0");
 }
 
-function getTyped(text: string, progress: number) {
-  if (progress >= 1) {
-    return text;
-  }
-  if (progress <= 0) {
-    return "";
-  }
-  const chars = Array.from(text);
-  const visible = Math.max(1, Math.floor(chars.length * progress));
-  return chars.slice(0, visible).join("");
-}
-
 function subscribeToReducedMotion(callback: () => void) {
   if (typeof window === "undefined") {
     return () => {};
@@ -61,50 +49,23 @@ function GallerySlide({
   slideRef,
   contentRef,
 }: GallerySlideProps) {
-  const [typedProgress, setTypedProgress] = useState(
-    slide.typewriter && !prefersReducedMotion ? 0 : 1
-  );
-  const [hasTypedOnce, setHasTypedOnce] = useState(prefersReducedMotion);
+  const [hasEntered, setHasEntered] = useState(index === 0);
+  const isExternalCta = slide.ctaHref.startsWith("http");
 
   useEffect(() => {
-    if (!slide.typewriter || prefersReducedMotion || hasTypedOnce || !isActive) {
-      return;
+    if (isActive) {
+      setHasEntered(true);
     }
-
-    let raf = 0;
-    let start: number | null = null;
-    const duration = 1400;
-
-    const animate = (time: number) => {
-      if (start === null) {
-        start = time;
-      }
-
-      const progress = Math.min(1, (time - start) / duration);
-      setTypedProgress(progress);
-
-      if (progress < 1) {
-        raf = requestAnimationFrame(animate);
-      } else {
-        setHasTypedOnce(true);
-      }
-    };
-
-    raf = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(raf);
-  }, [hasTypedOnce, isActive, prefersReducedMotion, slide.typewriter]);
-
-  const typedTitle = slide.typewriter ? getTyped(slide.title, typedProgress) : slide.title;
-  const typedSubtitle = slide.typewriter ? getTyped(slide.subtitle, typedProgress) : slide.subtitle;
+  }, [isActive]);
 
   return (
     <article
       ref={slideRef}
       className={`gallery-slide ${slide.imageClass}`}
       style={{
-        opacity: index === 0 ? 1 : 0,
-        transform: "translate3d(0, 0, 0) scale(1.02)",
-        zIndex: index === 0 ? 3 : 1,
+        opacity: 1,
+        transform: `translate3d(0, ${index === 0 ? 0 : 100}%, 0) scale(1)`,
+        zIndex: index + 1,
       }}
       aria-hidden={!isActive}
     >
@@ -115,7 +76,7 @@ function GallerySlide({
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
           aria-hidden
         >
           <source src={slide.video} type="video/mp4" />
@@ -129,19 +90,26 @@ function GallerySlide({
           ref={contentRef}
           className="gallery-content"
           style={{
-            opacity: index === 0 ? 1 : 0,
+            opacity: 1,
             transform: "translate3d(0, 0, 0)",
           }}
+          data-active={isActive ? "true" : "false"}
+          data-entered={hasEntered ? "true" : "false"}
         >
           <p className="gallery-kicker">{slide.kicker}</p>
           <h1>
-            {typedTitle}
-            {slide.typewriter && typedProgress < 1 ? <span className="typewriter-cursor">|</span> : null}
+            {slide.title}
           </h1>
-          <p>{typedSubtitle}</p>
-          <Link href={slide.ctaHref} className="btn-ghost">
-            {slide.ctaLabel}
-          </Link>
+          <p>{slide.subtitle}</p>
+          {isExternalCta ? (
+            <a href={slide.ctaHref} className="btn-ghost" target="_blank" rel="noreferrer">
+              {slide.ctaLabel}
+            </a>
+          ) : (
+            <Link href={slide.ctaHref} className="btn-ghost">
+              {slide.ctaLabel}
+            </Link>
+          )}
         </div>
 
         <div className="gallery-bottom">
@@ -205,21 +173,18 @@ export default function PinnedHeroGallery() {
         }
 
         const distance = index - position;
-        const absDistance = Math.abs(distance);
-        const isCurrent = absDistance < 0.5;
-        const isActive = absDistance < 1.1;
+        const clampedOffset = clamp(distance * 100, 0, 100);
+        const isCurrent = distance <= 0 && distance > -1;
 
-        slide.style.opacity = isActive ? "1" : "0";
-        slide.style.zIndex = isCurrent ? "3" : isActive ? "2" : "1";
+        slide.style.opacity = "1";
+        slide.style.zIndex = String(index + 1);
         slide.style.pointerEvents = isCurrent ? "auto" : "none";
         slide.style.transform = reducedMotion
           ? "translate3d(0, 0, 0) scale(1)"
-          : `translate3d(0, ${distance * 10}%, 0) scale(${1.02 + absDistance * 0.05})`;
+          : `translate3d(0, ${clampedOffset}%, 0) scale(1)`;
 
-        content.style.opacity = reducedMotion ? (isCurrent ? "1" : "0") : String(clamp(1 - absDistance * 1.15, 0, 1));
-        content.style.transform = reducedMotion
-          ? "translate3d(0, 0, 0)"
-          : `translate3d(0, ${distance * 34}px, 0)`;
+        content.style.opacity = "1";
+        content.style.transform = "translate3d(0, 0, 0)";
       }
 
       if (nextActiveIndex !== lastActiveIndexRef.current) {

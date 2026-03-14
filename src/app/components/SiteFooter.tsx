@@ -3,8 +3,7 @@ import Link from "next/link";
 const primaryLinks = [
   { href: "/projeler", label: "Projeler" },
   { href: "/hakkimizda", label: "Hakkımızda" },
-/*   { href: "/referanslar", label: "Referanslar" },
- */  { href: "/iletisim", label: "İletişim" },
+  { href: "/iletisim", label: "İletişim" },
 ];
 
 /* const secondaryLinks = [
@@ -19,7 +18,7 @@ export default function SiteFooter() {
     <footer className="site-footer">
       <div className="footer-top">
         <Link href="/" className="footer-logo">
-          ÇEPOĞLU
+          ÇEPOĞLU YAPI A.Ş.
         </Link>
 
         <nav className="footer-primary" aria-label="Alt menü ana bağlantılar">
@@ -40,7 +39,7 @@ export default function SiteFooter() {
       </div>
 
       <div className="footer-bottom">
-        <p>© 2026 Çepoğlu. Tüm hakları saklıdır. | Gizlilik Politikası</p>
+        <p>© 2026 Çepoğlu Yapı A.Ş. Tüm hakları saklıdır. | Gizlilik Politikası</p>
       {/*   <div className="footer-social" aria-label="Sosyal medya bağlantıları">
           <a href="#" aria-label="LinkedIn">
             in

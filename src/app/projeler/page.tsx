@@ -13,6 +13,7 @@ export default function ProjectsPage() {
           eyebrow="Projeler"
           title="Tamamlanan ve devam eden proje portföyümüz"
           summary="Tüm projeler görsel kartlarla listelenmiştir. Kartlara tıklayarak detay sayfasına gidebilirsin."
+          videoPath="/videos/projects-hero.mp4"
         />
 
         <section className="content-grid">

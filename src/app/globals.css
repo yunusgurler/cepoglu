@@ -150,10 +150,11 @@ p {
 .brand-box {
   border: 2px solid color-mix(in srgb, var(--header-text) 80%, transparent);
   font-family: var(--font-heading), sans-serif;
-  font-size: 1.8rem;
+  font-size: clamp(0.92rem, 1.5vw, 1.28rem);
   letter-spacing: 0.04em;
   line-height: 1;
-  padding: 0.25rem 0.6rem 0.35rem;
+  padding: 0.4rem 0.7rem 0.45rem;
+  text-align: center;
 }
 
 .search-button,
@@ -205,8 +206,9 @@ p {
   pointer-events: none;
   transition: opacity 0.25s ease;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding: 6rem 1.25rem 2rem;
 }
 
 .mobile-panel.is-open {
@@ -216,14 +218,17 @@ p {
 
 .mobile-panel nav {
   display: grid;
-  gap: 1.25rem;
-  text-align: center;
+  gap: 0.9rem;
+  text-align: left;
+  width: min(100%, 28rem);
 }
 
 .mobile-panel a {
   font-family: var(--font-heading), sans-serif;
-  font-size: clamp(1.6rem, 5vw, 2.8rem);
+  font-size: clamp(1.2rem, 4vw, 2rem);
   letter-spacing: 0.04em;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--header-text) 18%, transparent);
 }
 
 .mobile-theme {
@@ -259,6 +264,14 @@ p {
   position: absolute;
   inset: 0;
   background: var(--overlay);
+}
+
+.page-hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .hero-grid-mark {
@@ -374,6 +387,7 @@ p {
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
   contain: paint;
+  overflow: hidden;
 }
 
 .gallery-overlay {
@@ -414,6 +428,38 @@ p {
   backface-visibility: hidden;
 }
 
+.gallery-content > * {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+}
+
+.gallery-content[data-entered="true"] > * {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.gallery-content[data-active="true"] > * {
+  transition:
+    opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 680ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gallery-content[data-active="true"] > :nth-child(1) {
+  transition-delay: 40ms;
+}
+
+.gallery-content[data-active="true"] > :nth-child(2) {
+  transition-delay: 110ms;
+}
+
+.gallery-content[data-active="true"] > :nth-child(3) {
+  transition-delay: 180ms;
+}
+
+.gallery-content[data-active="true"] > :nth-child(4) {
+  transition-delay: 250ms;
+}
+
 .gallery-kicker {
   text-transform: uppercase;
   font-size: 0.78rem;
@@ -425,23 +471,6 @@ p {
   font-size: clamp(2.3rem, 8.2vw, 7.6rem);
   max-width: 11ch;
   line-height: 1.03;
-}
-
-.typewriter-cursor {
-  margin-left: 0.14em;
-  opacity: 0.9;
-  animation: tw-blink 1s steps(1, end) infinite;
-}
-
-@keyframes tw-blink {
-  0%,
-  50% {
-    opacity: 0.95;
-  }
-  50.01%,
-  100% {
-    opacity: 0.2;
-  }
 }
 
 .gallery-content p {
@@ -459,8 +488,15 @@ p {
   .gallery-slide,
   .gallery-content,
   .gallery-video,
-  .typewriter-cursor {
+  .gallery-content > * {
     animation: none !important;
+  }
+
+  .gallery-content > *,
+  .gallery-content[data-active="true"] > * {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }
 
@@ -496,7 +532,7 @@ p {
 
 .gallery-project-01 {
   background-image:
-    url("/images/projects/My Dom Projesi.jpg"),
+    url("/images/projects/LoyaHomes.jpg"),
     linear-gradient(130deg, #2a3035, #12161a 68%);
 }
 
@@ -1135,6 +1171,20 @@ p {
   text-align: left;
 }
 
+.map-card {
+  padding: 0;
+  overflow: hidden;
+  min-height: 420px;
+}
+
+.contact-map {
+  display: block;
+  width: 100%;
+  min-height: 420px;
+  height: 100%;
+  border: 0;
+}
+
 .contact-form {
   display: grid;
   gap: 0.75rem;
@@ -1159,6 +1209,14 @@ p {
   padding: 0.9rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .map-card,
+  .office-card {
+    grid-column: span 12;
+    max-width: none;
+  }
 }
 
 .contact-form button:disabled {
@@ -1371,7 +1429,9 @@ p {
   }
 
   .brand-box {
-    font-size: 1.35rem;
+    font-size: 0.96rem;
+    letter-spacing: 0.03em;
+    padding: 0.38rem 0.52rem 0.42rem;
   }
 
   .hero-actions {
@@ -1413,6 +1473,23 @@ p {
 
   .gallery-bottom {
     font-size: 0.72rem;
+  }
+
+  .page-hero {
+    min-height: 58vh;
+    padding: 6.6rem 1rem 2rem;
+  }
+
+  .page-hero-content {
+    gap: 0.72rem;
+  }
+
+  .page-hero-content h1 {
+    font-size: clamp(1.9rem, 9vw, 3rem);
+  }
+
+  .page-hero-content p {
+    line-height: 1.6;
   }
 
   .stats-strip {

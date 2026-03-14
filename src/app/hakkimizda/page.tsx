@@ -22,16 +22,17 @@ export default function AboutPage() {
       <main>
         <PageHero
           eyebrow="Hakkımızda"
-          title="20 yılı aşkın birikimle insan merkezli yaşam alanları üretiyoruz"
+          title="30 yılı aşkın birikimle insan merkezli yaşam alanları üretiyoruz"
           summary="ÇEPOĞLU YAPI İNŞAAT, Anonim Şirket statüsüyle kurumsal yapısını güçlendirerek yeni nesil projelerini müşterileriyle buluşturmaya devam etmektedir."
           imageClass="about-cover"
+          videoPath="/videos/about-us-hero.mp4"
         />
 
         <section className="content-grid">
           <article className="block span-8 about-intro">
             <h2>Kurumsal Profil</h2>
             <p>
-              20 yılı aşkın süredir inşaat sektöründe faaliyet gösteren
+              30 yılı aşkın süredir inşaat sektöründe faaliyet gösteren
               müessesemiz, <strong>ÇEPOĞLU YAPI İNŞAAT</strong> ismiyle Anonim
               Şirket statüsü kazanmıştır. İnsan merkezli yaşam alanları
               geliştiren firmamız, sahip olduğu bilgi birikimi ve uygulama

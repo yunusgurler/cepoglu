@@ -15,7 +15,7 @@ const body = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "Çepoğlu",
+  title: "Çepoğlu Yapı A.Ş.",
   description: "Premium inşaat ve taahhüt projeleri için kurumsal web sitesi.",
 };
 

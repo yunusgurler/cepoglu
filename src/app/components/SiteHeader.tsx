@@ -7,8 +7,7 @@ import { type MouseEvent, useState } from "react";
 const navLinks = [
   { href: "/hakkimizda", label: "Hakkımızda" },
   { href: "/projeler", label: "Projeler" },
-/*   { href: "/referanslar", label: "Referanslar" },
- */  { href: "/iletisim", label: "İletişim" },
+  { href: "/iletisim", label: "İletişim" },
 ];
 
 export default function SiteHeader() {
@@ -38,7 +37,7 @@ export default function SiteHeader() {
         </nav>
 
         <Link href="/" className="brand-box" onClick={closeMenu}>
-          ÇEPOĞLU
+          ÇEPOĞLU YAPI A.Ş.
         </Link>
 
         <nav className="nav-group nav-right" aria-label="Sağ menü">
@@ -67,6 +66,9 @@ export default function SiteHeader() {
 
       <div className={`mobile-panel ${open ? "is-open" : ""}`} onClick={handleBackdropClick}>
         <nav aria-label="Mobil menü">
+          <Link href="/" onClick={closeMenu}>
+            Anasayfa
+          </Link>
           {navLinks.map((item) => (
             <Link key={item.href} href={item.href} onClick={closeMenu}>
               {item.label}

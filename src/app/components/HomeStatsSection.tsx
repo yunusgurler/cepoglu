@@ -30,7 +30,7 @@ export default function HomeStatsSection() {
   return (
     <section ref={sectionRef} className="home-stats-wrap">
       <section className={`section-shell stats-intro ${isVisible ? "is-visible" : ""}`}>
-        <p>Çepoğlu Sayılarla</p>
+        <p>Çepoğlu Yapı A.Ş. Sayılarla</p>
         <h2>Ölçek, deneyim ve teslim gücümüz</h2>
         <span>Her projede ölçülebilir performans, net planlama ve güvenilir uygulama.</span>
       </section>

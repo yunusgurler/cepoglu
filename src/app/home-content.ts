@@ -30,8 +30,8 @@ export const HOME_SLIDES: HomeSlide[] = [
   },
   {
     kicker: "Öne Çıkan Proje",
-    title: "My Dom",
-    subtitle: "Çepoğlu imzalı öne çıkan proje uygulamalarından biri.",
+    title: "Loya Homes",
+    subtitle: "Çepoğlu imzalı öne çıkan konut projelerinden biri.",
     imageClass: "gallery-project-01",
     ctaHref: "/projeler",
     ctaLabel: "Projeleri Gör",
@@ -56,19 +56,19 @@ export const HOME_SLIDES: HomeSlide[] = [
 
 export const HOME_STATS: HomeStat[] = [
   {
-    value: "20+",
+    value: "30+",
     label: "Yıllık Tecrübe",
     detail: "Uzun dönemli saha yönetimi ve taahhüt süreçlerinde birikim.",
     badge: "Uzun Yıllardır Sizinleyiz",
   },
   {
-    value: "20+",
+    value: "30+",
     label: "Tamamlanan Proje",
     detail: "Konut ve ticari projelerde planlı teslim geçmişi.",
     badge: "Zamanında teslim",
   },
   {
-    value: "3.2M m²",
+    value: "100.000 m²",
     label: "Toplam İnşaat Alanı",
     detail: "Farklı ölçeklerde uygulanan kapsamlı inşaat hacmi.",
     badge: "Geniş portföy",
