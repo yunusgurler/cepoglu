@@ -35,7 +35,6 @@ type GallerySlideProps = {
   index: number;
   totalSlides: number;
   isActive: boolean;
-  prefersReducedMotion: boolean;
   slideRef: (node: HTMLElement | null) => void;
   contentRef: (node: HTMLDivElement | null) => void;
 };
@@ -45,18 +44,10 @@ function GallerySlide({
   index,
   totalSlides,
   isActive,
-  prefersReducedMotion,
   slideRef,
   contentRef,
 }: GallerySlideProps) {
-  const [hasEntered, setHasEntered] = useState(index === 0);
   const isExternalCta = slide.ctaHref.startsWith("http");
-
-  useEffect(() => {
-    if (isActive) {
-      setHasEntered(true);
-    }
-  }, [isActive]);
 
   return (
     <article
@@ -94,7 +85,7 @@ function GallerySlide({
             transform: "translate3d(0, 0, 0)",
           }}
           data-active={isActive ? "true" : "false"}
-          data-entered={hasEntered ? "true" : "false"}
+          data-entered={index === 0 || isActive ? "true" : "false"}
         >
           <p className="gallery-kicker">{slide.kicker}</p>
           <h1>
@@ -225,16 +216,15 @@ export default function PinnedHeroGallery() {
     <section ref={sectionRef} className="pinned-gallery" aria-label="Tam ekran proje galerisi">
       <div className="pinned-stage">
         {HOME_SLIDES.map((slide, index) => (
-          <GallerySlide
-            key={slide.title}
-            slide={slide}
-            index={index}
-            totalSlides={totalSlides}
-            isActive={index === activeIndex}
-            prefersReducedMotion={prefersReducedMotion}
-            slideRef={(node) => {
-              slideRefs.current[index] = node;
-            }}
+        <GallerySlide
+          key={slide.title}
+          slide={slide}
+          index={index}
+          totalSlides={totalSlides}
+          isActive={index === activeIndex}
+          slideRef={(node) => {
+            slideRefs.current[index] = node;
+          }}
             contentRef={(node) => {
               contentRefs.current[index] = node;
             }}

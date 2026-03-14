@@ -1,3 +1,5 @@
+import { getSiteMediaUrl } from "@/lib/site-media";
+
 export type HomeSlide = {
   title: string;
   subtitle: string;
@@ -23,7 +25,7 @@ export const HOME_SLIDES: HomeSlide[] = [
     subtitle:
       "Büyük ölçekli projeleri kalite, güvenlik ve zaman disipliniyle teslim eden güçlü bir yüklenici altyapısı.",
     imageClass: "gallery-hero-main",
-    video: "/videos/cover.mp4",
+    video: getSiteMediaUrl("cover.mp4", "/videos/cover.mp4"),
     typewriter: true,
     ctaHref: "/hakkimizda",
     ctaLabel: "Hakkımızda",

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { type MouseEvent, useState } from "react";
 
 const navLinks = [
+  { href: "/", label: "Ana Sayfa" },
   { href: "/hakkimizda", label: "Hakkımızda" },
   { href: "/projeler", label: "Projeler" },
   { href: "/iletisim", label: "İletişim" },
@@ -25,7 +26,7 @@ export default function SiteHeader() {
     <header className="top-shell">
       <div className="top-nav">
         <nav className="nav-group nav-left" aria-label="Sol menü">
-          {navLinks.slice(0, 1).map((item) => (
+          {navLinks.slice(0, 2).map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -41,7 +42,7 @@ export default function SiteHeader() {
         </Link>
 
         <nav className="nav-group nav-right" aria-label="Sağ menü">
-          {navLinks.slice(1).map((item) => (
+          {navLinks.slice(2).map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -66,9 +67,6 @@ export default function SiteHeader() {
 
       <div className={`mobile-panel ${open ? "is-open" : ""}`} onClick={handleBackdropClick}>
         <nav aria-label="Mobil menü">
-          <Link href="/" onClick={closeMenu}>
-            Anasayfa
-          </Link>
           {navLinks.map((item) => (
             <Link key={item.href} href={item.href} onClick={closeMenu}>
               {item.label}

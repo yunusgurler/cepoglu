@@ -938,6 +938,12 @@ p {
   background-position: center;
 }
 
+.project-gallery-image.is-empty {
+  background:
+    linear-gradient(130deg, rgba(214, 40, 40, 0.16), transparent),
+    linear-gradient(130deg, #272d33, #111417);
+}
+
 .project-gallery-content {
   padding: 1rem;
   display: grid;
@@ -965,6 +971,7 @@ p {
 }
 
 .project-detail-gallery-item {
+  position: relative;
   grid-column: span 4;
   min-height: 260px;
   border: 1px solid var(--border);
@@ -972,6 +979,27 @@ p {
   background-size: cover;
   background-position: center;
   cursor: zoom-in;
+  overflow: hidden;
+  padding: 0;
+}
+
+.project-detail-gallery-item.is-video::after {
+  content: "VIDEO";
+  position: absolute;
+  left: 0.8rem;
+  bottom: 0.8rem;
+  z-index: 1;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(6, 7, 8, 0.6);
+  padding: 0.3rem 0.45rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.project-detail-gallery-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .project-detail-gallery-item:nth-child(1),
@@ -1007,6 +1035,12 @@ p {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+}
+
+.project-lightbox-video {
+  width: min(100%, 1500px);
+  max-height: min(84vh, 920px);
+  background: #000;
 }
 
 .project-lightbox-close,
@@ -1217,6 +1251,19 @@ p {
     grid-column: span 12;
     max-width: none;
   }
+
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 .contact-form button:disabled {
@@ -1235,6 +1282,218 @@ p {
 
 .form-feedback.error {
   color: #ff6b6b;
+}
+
+.admin-auth-shell,
+.admin-shell {
+  width: min(100%, 1100px);
+  margin: 0 auto;
+  padding: 7.5rem 1.25rem 3rem;
+}
+
+.admin-auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+}
+
+.admin-auth-card,
+.admin-card {
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+}
+
+.admin-auth-card {
+  width: min(100%, 32rem);
+  padding: 1.4rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-header h1,
+.admin-auth-card h1 {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+}
+
+.admin-header p:last-child,
+.admin-auth-card p:last-child,
+.admin-card p {
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.admin-header-actions,
+.admin-project-actions,
+.admin-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.admin-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.1rem;
+}
+
+.admin-card {
+  padding: 1.25rem;
+}
+
+.admin-project-card {
+  display: grid;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.admin-project-cover {
+  min-height: 220px;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.32)),
+    linear-gradient(130deg, #272d33, #111417);
+  background-size: cover;
+  background-position: center;
+}
+
+.admin-project-cover.is-empty {
+  background:
+    linear-gradient(145deg, rgba(214, 40, 40, 0.18), transparent),
+    linear-gradient(130deg, #272d33, #111417);
+}
+
+.admin-project-body {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1.1rem 1.1rem 1.2rem;
+}
+
+.admin-project-top {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-project-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.admin-project-badges span {
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  padding: 0.32rem 0.52rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-project-card h2 {
+  font-size: clamp(1.45rem, 2.3vw, 2.15rem);
+}
+
+.admin-project-meta,
+.admin-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.76rem;
+  color: #c9cdd1;
+}
+
+.admin-project-summary {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 4.8em;
+}
+
+.admin-project-count {
+  font-size: 0.9rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+}
+
+.admin-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-form-wide {
+  gap: 1.15rem;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.admin-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-field span {
+  font-size: 0.88rem;
+  color: #dadde0;
+}
+
+.admin-field input,
+.admin-field select,
+.admin-field textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.28);
+  color: #fff;
+  padding: 0.85rem 0.95rem;
+  font: inherit;
+}
+
+.admin-field input[type="file"] {
+  padding: 0.7rem;
+}
+
+.admin-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  padding: 0.8rem 1rem;
+  font: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.admin-button:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.admin-button-ghost {
+  border-color: var(--border);
+  background: transparent;
+}
+
+.admin-button-danger {
+  border-color: rgba(214, 40, 40, 0.7);
+  background: rgba(214, 40, 40, 0.18);
+}
+
+.admin-error {
+  color: #ff9d9d;
 }
 
 .site-footer {
@@ -1265,7 +1524,7 @@ p {
   justify-self: start;
   border: 2px solid color-mix(in srgb, var(--footer-text) 85%, transparent);
   font-family: var(--font-heading), sans-serif;
-  font-size: clamp(1.55rem, 3.6vw, 3rem);
+  font-size: clamp(1rem, 2vw, 2.45rem);
   font-weight: 800;
   letter-spacing: 0.04em;
   line-height: 1;
@@ -1279,7 +1538,7 @@ p {
 
 .footer-primary a {
   font-family: var(--font-heading), sans-serif;
-  font-size: clamp(2.1rem, 4.7vw, 4.5rem);
+  font-size: clamp(1.75rem, 2vw, 3.5rem);
   line-height: 1;
   letter-spacing: -0.01em;
 }
@@ -1309,7 +1568,7 @@ p {
 
 .footer-bottom p {
   color: var(--footer-muted);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
 }
 
 .footer-social {
@@ -1540,7 +1799,7 @@ p {
   }
 
   .footer-primary a {
-    font-size: clamp(1.8rem, 9vw, 2.6rem);
+    font-size: clamp(1.55rem, 8vw, 2.2rem);
   }
 
   .footer-secondary {
@@ -1554,6 +1813,6 @@ p {
   }
 
   .footer-bottom p {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
   }
 }

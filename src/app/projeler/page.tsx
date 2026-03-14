@@ -2,9 +2,12 @@ import Link from "next/link";
 import PageHero from "../components/PageHero";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
-import { PROJECTS } from "../projects-data";
+import { getProjects } from "../projects-data";
+import { getSiteMediaUrl } from "@/lib/site-media";
 
-export default function ProjectsPage() {
+export default async function ProjectsPage() {
+  const projects = await getProjects();
+
   return (
     <div id="top" className="site-wrap">
       <SiteHeader />
@@ -13,7 +16,7 @@ export default function ProjectsPage() {
           eyebrow="Projeler"
           title="Tamamlanan ve devam eden proje portföyümüz"
           summary="Tüm projeler görsel kartlarla listelenmiştir. Kartlara tıklayarak detay sayfasına gidebilirsin."
-          videoPath="/videos/projects-hero.mp4"
+          videoPath={getSiteMediaUrl("projects-hero.mp4", "/videos/projects-hero.mp4")}
         />
 
         <section className="content-grid">
@@ -23,9 +26,12 @@ export default function ProjectsPage() {
           </article>
 
           <article className="span-12 project-gallery-grid">
-            {PROJECTS.map((project) => (
+            {projects.map((project) => (
               <Link key={project.slug} href={`/projeler/${project.slug}`} className="project-gallery-card">
-                <div className="project-gallery-image" style={{ backgroundImage: `url('${project.image}')` }} />
+                <div
+                  className={`project-gallery-image ${project.coverImage ? "" : "is-empty"}`}
+                  style={project.coverImage ? { backgroundImage: `url('${project.coverImage}')` } : undefined}
+                />
                 <div className="project-gallery-content">
                   <p className="project-meta">
                     {project.type} • {project.location} • {project.status}

@@ -1,21 +1,9 @@
 import PageHero from "../components/PageHero";
 import SiteFooter from "../components/SiteFooter";
 import SiteHeader from "../components/SiteHeader";
+import { getSiteMediaUrl } from "@/lib/site-media";
 
 export default function AboutPage() {
-  const values = [
-    "Müşteri Memnuniyeti",
-    "Kaliteden Ödün Vermemek",
-    "Dürüstlük",
-    "Süreklilik",
-    "Hesap Verebilirlik",
-    "Karşılıklı Saygı ve Sevgi",
-    "Yaratıcılık",
-    "Verimlilik",
-    "Çağdaşlık",
-    "Çevrecilik",
-  ];
-
   return (
     <div id="top" className="site-wrap">
       <SiteHeader />
@@ -25,7 +13,7 @@ export default function AboutPage() {
           title="30 yılı aşkın birikimle insan merkezli yaşam alanları üretiyoruz"
           summary="ÇEPOĞLU YAPI İNŞAAT, Anonim Şirket statüsüyle kurumsal yapısını güçlendirerek yeni nesil projelerini müşterileriyle buluşturmaya devam etmektedir."
           imageClass="about-cover"
-          videoPath="/videos/about-us-hero.mp4"
+          videoPath={getSiteMediaUrl("about-us-hero.mp4", "/videos/about-us-hero.mp4")}
         />
 
         <section className="content-grid">
