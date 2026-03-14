@@ -104,4 +104,40 @@ export async function deleteProjectAction(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/projeler");
+  redirect("/admin");
+}
+
+export async function saveProjectOrderAction(formData: FormData) {
+  if (!hasSupabaseServiceRoleEnv()) {
+    throw new Error("Supabase service role ayarlari eksik.");
+  }
+
+  const user = await getAdminUser();
+
+  if (!user) {
+    redirect("/admin/login");
+  }
+
+  const orderRaw = String(formData.get("order") ?? "");
+  const order = JSON.parse(orderRaw) as string[];
+
+  if (!Array.isArray(order) || order.length === 0) {
+    return;
+  }
+
+  const admin = createSupabaseAdminClient();
+  for (const [index, projectId] of order.entries()) {
+    const { error: updateError } = await admin
+      .from("projects")
+      .update({ sort_order: index })
+      .eq("id", projectId);
+
+    if (updateError) {
+      throw new Error(`Failed to update project order: ${updateError.message}`);
+    }
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/projeler");
+  redirect("/admin");
 }

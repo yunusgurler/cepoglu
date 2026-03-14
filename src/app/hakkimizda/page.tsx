@@ -31,7 +31,7 @@ export default function AboutPage() {
 
           <article className="block span-4 about-kpi">
             <p className="about-kpi-label">Kurumsal Güç</p>
-            <strong>20+ Yıl </strong>
+            <strong>30+ Yıl </strong>
             <span>Tecrübe</span>
             <p className="about-kpi-note">
               Anonim Şirket statüsüyle güçlenen kurumsal yönetim.

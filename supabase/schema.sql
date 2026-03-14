@@ -3,6 +3,7 @@ create extension if not exists pgcrypto;
 create table if not exists public.projects (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,
+  sort_order integer not null default 999,
   name text not null,
   location text not null,
   type text not null,
@@ -11,6 +12,9 @@ create table if not exists public.projects (
   details text[] not null default '{}',
   created_at timestamptz not null default now()
 );
+
+alter table public.projects
+add column if not exists sort_order integer not null default 999;
 
 create table if not exists public.project_media (
   id uuid primary key default gen_random_uuid(),

@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { cache } from "react";
 import { createSupabaseServerClient } from "./supabase/server";
 import { hasSupabasePublicEnv } from "./supabase/env";
 import fallbackProjects from "../content/projects.json";
@@ -16,6 +15,7 @@ export type ProjectMediaItem = {
 export type ProjectItem = {
   id: string;
   slug: string;
+  sortOrder: number;
   name: string;
   location: string;
   type: string;
@@ -30,6 +30,7 @@ export type ProjectItem = {
 type ProjectRow = {
   id: string;
   slug: string;
+  sort_order: number | null;
   name: string;
   location: string;
   type: string;
@@ -61,6 +62,11 @@ type FallbackProjectRow = {
 
 const PRIORITY_PROJECT_SLUGS = ["loya-homes", "my-hill-residence", "jasmine-boutiqe"] as const;
 
+function getPrioritySortOrder(slug: string, fallbackIndex: number) {
+  const priorityIndex = PRIORITY_PROJECT_SLUGS.indexOf(slug as (typeof PRIORITY_PROJECT_SLUGS)[number]);
+  return priorityIndex === -1 ? fallbackIndex + PRIORITY_PROJECT_SLUGS.length : priorityIndex;
+}
+
 function mapProject(row: ProjectRow): ProjectItem {
   const media = (row.project_media ?? []).map((item) => ({
     id: item.id,
@@ -75,6 +81,7 @@ function mapProject(row: ProjectRow): ProjectItem {
   return {
     id: row.id,
     slug: row.slug,
+    sortOrder: row.sort_order ?? Number.MAX_SAFE_INTEGER,
     name: row.name,
     location: row.location,
     type: row.type,
@@ -132,6 +139,7 @@ function getFallbackProjects() {
     return {
       id: project.slug,
       slug: project.slug,
+      sortOrder: getPrioritySortOrder(project.slug, index),
       name: project.name,
       location: project.location,
       type: project.type,
@@ -147,21 +155,15 @@ function getFallbackProjects() {
 
 function sortProjects(projects: ProjectItem[]) {
   return [...projects].sort((left, right) => {
-    const leftPriority = PRIORITY_PROJECT_SLUGS.indexOf(left.slug as (typeof PRIORITY_PROJECT_SLUGS)[number]);
-    const rightPriority = PRIORITY_PROJECT_SLUGS.indexOf(right.slug as (typeof PRIORITY_PROJECT_SLUGS)[number]);
-
-    const normalizedLeftPriority = leftPriority === -1 ? Number.MAX_SAFE_INTEGER : leftPriority;
-    const normalizedRightPriority = rightPriority === -1 ? Number.MAX_SAFE_INTEGER : rightPriority;
-
-    if (normalizedLeftPriority !== normalizedRightPriority) {
-      return normalizedLeftPriority - normalizedRightPriority;
+    if (left.sortOrder !== right.sortOrder) {
+      return left.sortOrder - right.sortOrder;
     }
 
-    return 0;
+    return right.createdAt.localeCompare(left.createdAt);
   });
 }
 
-export const getProjects = cache(async () => {
+export async function getProjects() {
   if (!hasSupabasePublicEnv()) {
     return getFallbackProjects();
   }
@@ -170,8 +172,9 @@ export const getProjects = cache(async () => {
   const { data, error } = await supabase
     .from("projects")
     .select(
-      "id, slug, name, location, type, status, summary, details, created_at, project_media(id, kind, storage_path, public_url, created_at)"
+      "id, slug, sort_order, name, location, type, status, summary, details, created_at, project_media(id, kind, storage_path, public_url, created_at)"
     )
+    .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false })
     .order("created_at", { foreignTable: "project_media", ascending: true });
 
@@ -180,7 +183,7 @@ export const getProjects = cache(async () => {
   }
 
   return sortProjects((data as ProjectRow[]).map(mapProject));
-});
+}
 
 export async function getProjectBySlug(slug: string) {
   if (!hasSupabasePublicEnv()) {
@@ -191,7 +194,7 @@ export async function getProjectBySlug(slug: string) {
   const { data, error } = await supabase
     .from("projects")
     .select(
-      "id, slug, name, location, type, status, summary, details, created_at, project_media(id, kind, storage_path, public_url, created_at)"
+      "id, slug, sort_order, name, location, type, status, summary, details, created_at, project_media(id, kind, storage_path, public_url, created_at)"
     )
     .eq("slug", slug)
     .order("created_at", { foreignTable: "project_media", ascending: true })

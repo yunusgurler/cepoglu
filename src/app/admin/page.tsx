@@ -2,9 +2,11 @@ import Link from "next/link";
 import { requireAdminUser } from "@/lib/auth";
 import { getProjects } from "@/lib/projects";
 import { hasSupabasePublicEnv } from "@/lib/supabase/env";
-import { deleteProjectAction, logoutAction } from "./actions";
+import { logoutAction } from "./actions";
+import AdminProjectList from "./AdminProjectList";
 import AdminLogoutButton from "./AdminLogoutButton";
-import DeleteProjectButton from "./DeleteProjectButton";
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
   if (!hasSupabasePublicEnv()) {
@@ -40,42 +42,14 @@ export default async function AdminDashboardPage() {
         </div>
       </section>
 
-      <section className="admin-list">
+      <section>
         {projects.length === 0 ? (
           <article className="admin-card">
             <h2>Henuz proje yok</h2>
             <p>Ilk projeyi eklemek icin yeni proje ekranini kullanin.</p>
           </article>
         ) : (
-          projects.map((project) => (
-            <article key={project.id} className="admin-card admin-project-card">
-              <div
-                className={`admin-project-cover ${project.coverImage ? "" : "is-empty"}`}
-                style={project.coverImage ? { backgroundImage: `url('${project.coverImage}')` } : undefined}
-              />
-              <div className="admin-project-body">
-                <div className="admin-project-top">
-                  <div className="admin-project-badges">
-                    <span>{project.type}</span>
-                    <span>{project.status}</span>
-                  </div>
-                  <p className="admin-project-meta">{project.location}</p>
-                </div>
-                <h2>{project.name}</h2>
-                <p className="admin-project-summary">{project.summary}</p>
-                <p className="admin-project-count">{project.media.length} medya dosyasi</p>
-                <div className="admin-project-actions">
-                  <Link href={`/projeler/${project.slug}`} className="admin-button admin-button-ghost">
-                    Goruntule
-                  </Link>
-                  <form action={deleteProjectAction}>
-                    <input type="hidden" name="projectId" value={project.id} />
-                    <DeleteProjectButton />
-                  </form>
-                </div>
-              </div>
-            </article>
-          ))
+          <AdminProjectList projects={projects} />
         )}
       </section>
     </main>

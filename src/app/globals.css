@@ -1264,6 +1264,11 @@ p {
   .admin-list {
     grid-template-columns: 1fr;
   }
+
+  .admin-order-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 .contact-form button:disabled {
@@ -1336,6 +1341,24 @@ p {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.admin-order-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-order-toolbar.bottom {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+.admin-order-note {
+  color: var(--text-muted);
+  font-size: 0.92rem;
 }
 
 .admin-list {

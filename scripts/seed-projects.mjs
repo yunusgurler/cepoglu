@@ -54,6 +54,8 @@ const projectFile = path.join(process.cwd(), "src", "content", "projects.json");
 const publicDir = path.join(process.cwd(), "public");
 const projects = JSON.parse(fs.readFileSync(projectFile, "utf8"));
 
+const PRIORITY_PROJECT_SLUGS = ["loya-homes", "my-hill-residence", "jasmine-boutiqe"];
+
 function toLocalFilePath(publicPath) {
   return path.join(publicDir, publicPath.replace(/^\//, ""));
 }
@@ -71,6 +73,11 @@ function sanitizeFileName(value) {
     .toLowerCase();
 
   return `${normalized || "file"}${extension}`;
+}
+
+function getSortOrder(slug, fallbackIndex) {
+  const priorityIndex = PRIORITY_PROJECT_SLUGS.indexOf(slug);
+  return priorityIndex === -1 ? fallbackIndex + PRIORITY_PROJECT_SLUGS.length : priorityIndex;
 }
 
 async function uploadFile(bucket, storagePath, localFilePath, contentType) {
@@ -93,6 +100,7 @@ for (const project of projects) {
     .upsert(
       {
         slug: project.slug,
+        sort_order: getSortOrder(project.slug, projects.indexOf(project)),
         name: project.name,
         location: project.location,
         type: project.type,

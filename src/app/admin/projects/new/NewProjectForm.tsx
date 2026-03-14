@@ -108,8 +108,22 @@ export default function NewProjectForm() {
 
         const { data: projectRow, error: projectError } = await supabase
           .from("projects")
+          .select("sort_order")
+          .order("sort_order", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (projectError) {
+          throw new Error(projectError.message);
+        }
+
+        const nextSortOrder = (projectRow?.sort_order ?? -1) + 1;
+
+        const { data: insertedProjectRow, error: insertError } = await supabase
+          .from("projects")
           .insert({
             slug: normalizedSlug,
+            sort_order: nextSortOrder,
             name,
             location,
             type,
@@ -120,12 +134,12 @@ export default function NewProjectForm() {
           .select("id")
           .single();
 
-        if (projectError || !projectRow) {
-          throw new Error(projectError?.message ?? "Proje kaydi olusturulamadi.");
+        if (insertError || !insertedProjectRow) {
+          throw new Error(insertError?.message ?? "Proje kaydi olusturulamadi.");
         }
 
-        const imageRows = await uploadFiles(projectRow.id, imageFiles, "project-images", "image");
-        const videoRows = await uploadFiles(projectRow.id, videoFiles, "project-videos", "video");
+        const imageRows = await uploadFiles(insertedProjectRow.id, imageFiles, "project-images", "image");
+        const videoRows = await uploadFiles(insertedProjectRow.id, videoFiles, "project-videos", "video");
         const mediaRows = [...imageRows, ...videoRows];
 
         if (mediaRows.length > 0) {
